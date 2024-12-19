@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
     // Các thông tin thanh toán
     const orderInfo = 'Pay with MoMo';
     const partnerCode = 'MOMO';
-    const redirectUrl = `${process.env.REACT_APP_BASE_URL1}/orders`;
+    const redirectUrl = `${process.env.CLIENT_BASE_URL}/orders`;
 
     //const redirectUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b'; // URL trả về sau khi thanh toán
     const ipnUrl = 'https://810b-42-113-220-239.ngrok-free.app/callback'; // URL nhận kết quả IPN
