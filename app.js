@@ -5,10 +5,21 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 //import axios from "axios";
 require('dotenv/config');
+const path = require('path');
 const authJwt = require('./helper/jwt.js');
 
 app.use(cors());
 app.options('*', cors())
+
+// Static folder cho React build files
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+// Middleware xử lý các route không phải API
+app.get('*', (req, res) => {
+    if (!req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
+        res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+    }
+});
 
 //middleware
 app.use(bodyParser.json());
