@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
       if (!userid) {
         return res.status(400).json({
           success: false,
-          message: "UserId không hợp lệ",
+          message: "UserId không hợp lệ ~~~",
         });
       }
   
@@ -40,10 +40,10 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
       // Lấy dữ liệu từ body của request
-      const { name, phoneNumber, address, pincode, email, amount, order_receipt, userid, products } = req.body;
+      const { name, phoneNumber, address, email, amount, order_receipt, userid, products } = req.body;
   
       // Kiểm tra dữ liệu đầu vào
-      if (!name || !phoneNumber || !address || !pincode || !email || !amount || !order_receipt || !userid || !products) {
+      if (!name || !phoneNumber || !address || !email || !amount || !order_receipt || !userid || !products) {
         return res.status(400).json({
           message: 'Thiếu thông tin cần thiết để tạo đơn hàng.',
         });
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
         name,
         phoneNumber,
         address,
-        pincode,
+        // pincode,
         email,
         amount,
         order_receipt,
@@ -135,6 +135,29 @@ router.get('/all', async (req, res) => {
       });
   }
 });
+router.post('/update-status', async (req, res) => {
+  const { orderReceipt, newStatus } = req.body;
+
+  try {
+      // Tìm đơn hàng theo order_receipt
+      const order = await Order.findOne({ order_receipt: orderReceipt });
+
+      if (!order) {
+          return res.status(404).json({ success: false, message: "Order not found" });
+      }
+
+      // Cập nhật trạng thái
+      order.orderStatus = newStatus;
+      order.updatedAt = Date.now();
+      await order.save();
+
+      res.json({ success: true, message: "Order status updated successfully", order });
+  } catch (error) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 
 
 module.exports = router;

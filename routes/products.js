@@ -74,7 +74,7 @@ router.get(`/`, async (req, res) => {
     let productList=[];
 
     if( req.query.minPrice !== undefined && req.query.maxPrice !== undefined){
-        productList = await Product.find({catName: req.query.catName}).populate("category");
+        productList = await Product.find({catId: req.query.catId}).populate("category");
 
         const filteredProducts = productList.filter( product => {
             if( req.query.minPrice && product.price < parseInt(+req.query.minPrice)){
@@ -175,6 +175,7 @@ router.post('/create', upload.array('images', 10), async (req, res) => {
         brand: req.body.brand,
         price: req.body.price,
         catName: req.body.catName,
+        catId: req.body.catId,
         category: req.body.category,
         oldPrice: req.body.oldPrice,
         countInStock: req.body.countInStock,
@@ -292,6 +293,31 @@ router.get('/recentlyViewed', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+router.put(`/:id/reduce-stock`, async (req, res) => {
+    const { countInStock } = req.body;
+
+
+    try {
+        // Giảm số lượng tồn kho bằng `$inc`
+        const product = await Product.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { countInStock: parseInt(countInStock, 10) } }, // Giảm số lượng tồn kho
+            { new: true } // Trả về sản phẩm sau khi cập nhật
+        );
+
+        res.status(200).json({
+            message: 'Giảm tồn kho thành công',
+            product, // Trả về sản phẩm đã cập nhật
+        });
+    } catch (error) {
+        console.error('Lỗi khi giảm tồn kho:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+
+
 router.post('/recentlyViewed', async (req, res) => {
     try {
         let findProduct = await RecentlyViewed.find({proId: req.body.id});
@@ -392,6 +418,8 @@ router.put('/:id', upload.array('images', 10), async (req, res) => {
                 price: req.body.price || product.price,
                 oldPrice: req.body.oldPrice || product.oldPrice,
                 category: req.body.category || product.category,
+                catName: req.body.catName || product.catName,
+                catId: req.body.catId|| product.catId,
                 countInStock: req.body.countInStock || product.countInStock,
                 rating: req.body.rating || product.rating,
                 isFeatured: req.body.isFeatured !== undefined ? req.body.isFeatured : product.isFeatured,
@@ -422,6 +450,7 @@ router.put('/:id', upload.array('images', 10), async (req, res) => {
         });
     }
 });
+
 router.get(`/get/count`, async (req, res) => {
     try {
         // Gọi countDocuments để đếm tổng số sản phẩm

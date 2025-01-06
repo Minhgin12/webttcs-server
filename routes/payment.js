@@ -69,30 +69,30 @@ router.post("/", async (req, res) => {
 
     try {
         const result = await axios(options); // Gửi yêu cầu tới MoMo
-        //return res.status(200).json(result.data); // Trả về kết quả từ MoMo
-        if (result.data && result.data.orderId) {
+        return res.status(200).json(result.data); // Trả về kết quả từ MoMo
+        // if (result.data && result.data.orderId) {
 
-           // Lấy giỏ hàng của người dùng
-            const cartItems = await Cart.find({ userId: userid });
+        //    // Lấy giỏ hàng của người dùng
+        //     const cartItems = await Cart.find({ userId: userid });
 
-            // Cập nhật số lượng tồn kho
-            for (const item of cartItems) {
-                await Product.findByIdAndUpdate(
-                    item.productId,
-                    { $inc: { countInStock: -item.quantity } },
-                    { new: true }
-                );
-            }
+        //     // Cập nhật số lượng tồn kho
+        //     for (const item of cartItems) {
+        //         await Product.findByIdAndUpdate(
+        //             item.productId,
+        //             { $inc: { countInStock: -item.quantity } },
+        //             { new: true }
+        //         );
+        //     }
 
-            // Xóa giỏ hàng
-            await Cart.deleteMany({ userId: userid });
+        //     // Xóa giỏ hàng
+        //     await Cart.deleteMany({ userId: userid });
 
-            return res.status(200).json(result.data);
-        } else {
-            return res.status(400).json({
-                message: "Không thể tạo thanh toán."
-            });
-        }
+        //     return res.status(200).json(result.data);
+        // } else {
+        //     return res.status(400).json({
+        //         message: "Không thể tạo thanh toán."
+        //     });
+        // }
     } catch (error) {
         console.error("Error in MoMo API:", error); // Ghi log lỗi
         return res.status(500).json({

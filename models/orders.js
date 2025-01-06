@@ -6,7 +6,7 @@ const orderSchema = new mongoose.Schema({
     name: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     address: { type: String, required: true },
-    pincode: { type: String, required: true },
+    // pincode: { type: String, required: true },
     email: { type: String, required: true },
     amount: { type: Number, required: true },
     order_receipt: { type: String, required: true },
@@ -22,6 +22,7 @@ const orderSchema = new mongoose.Schema({
             rating: { type: Number },
         },
     ],
+    orderStatus: { type: String, default: "pending" }, // Thêm trạng thái
 }, { timestamps: true });
 
 // Tạo model

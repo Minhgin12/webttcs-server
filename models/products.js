@@ -28,6 +28,10 @@ const productSchema = mongoose.Schema({
     type: String,
     default: ''
 },
+    catId:{
+    type: String,
+    default: ''
+},
     category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',

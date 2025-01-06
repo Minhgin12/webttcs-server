@@ -29,8 +29,10 @@ const search = require('./routes/search.js')
 const orderRoutes = require('./routes/order.js')
 
 
+
 const productReviewRoutes= require('./routes/productReviews.js');
 // app.use(authJwt());
+const dialogflowRouter = require('./routes/dialogflow.js');  // Import Dialogflow routes
 app.use("/uploads",express.static("uploads"));
 app.use(`/api/category`,categoryRoutes);
 app.use(`/api/products`,productRoutes);
@@ -41,6 +43,7 @@ app.use(`/api/payment`, paymentRoutes);
 app.use(`/api/productReviews`,productReviewRoutes)
 app.use(`/api/search`, search);
 app.use(`/api/order`, orderRoutes );
+app.use(`/api/dialogflow`, dialogflowRouter);  // Sử dụng Dialogflow routes
 //Database
 mongoose.connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
