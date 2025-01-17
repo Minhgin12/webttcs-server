@@ -2,20 +2,7 @@ const { Cart } = require('../models/cart');
 const express = require('express');
 const router = express.Router();
 const { Product } = require('../models/products');
-// Get /cart
-// router.get(`/`, async (req, res) => {
-//     try {
-//         const cartList = await Cart.find(req.query);
 
-//         if (!cartList) {
-//             res.status(500).json({ success: false })
-//         }
-//         return res.status(200).json(cartList);
-//     }
-//     catch (error) {
-//         res.status(500).json({ success: false })
-//     }
-// });
 
 router.get(`/`, async (req, res) => {
     try {
@@ -37,64 +24,6 @@ router.get(`/`, async (req, res) => {
 });
 
 
-// router.post('/add', async (req, res) => {
-
-//     let cartList = new Cart({
-//       productTitle: req.body.productTitle,
-//       images: req.body.image,
-//       rating: req.body.rating,
-//       price: req.body.price,
-//       quantity: req.body.quantity,
-//       subTotal: req.body.subTotal,
-//       productId: req.body.productId,
-//       userId: req.body.userId,
-//     });
-
-//     if (!cartList) {
-//         res.status(500).json({
-//           error: err,
-//           success: false
-//         })
-//     }
-
-//     cartList = await cartList.save();
-//     res.status(201).json(cartList);
-
-
-// });
-
-// router.post('/add', async (req, res) => {
-//     try {
-//         const { productTitle, images, rating, price, quantity, subTotal, productId, userId } = req.body;
-
-//         if (!productTitle || !images || !rating || !price || !quantity || !subTotal || !productId || !userId) {
-//             return res.status(400).json({ success: false, error: "Thiếu dữ liệu đầu vào" });
-//         }
-
-//         const existingCartItem = await Cart.findOne({ productId, userId });
-
-//         if (existingCartItem) {
-//             return res.status(400).json({ success: false, message: "Sản phẩm đã có trong giỏ hàng" });
-//         }
-
-//         const cartItem = new Cart({
-//             productTitle,
-//             images,
-//             rating,
-//             price,
-//             quantity,
-//             subTotal,
-//             productId,
-//             userId
-//         });
-
-//         await cartItem.save();
-//         res.status(201).json({ success: true, message: "Thêm sản phẩm thành công", cart: cartItem });
-//     } catch (err) {
-//         console.error("Error saving cart:", err);
-//         res.status(500).json({ success: false, error: "Lỗi khi thêm sản phẩm vào giỏ hàng" });
-//     }
-// });
 router.post('/add', async (req, res) => {
     try {
         const { productTitle, images, rating, price, quantity, subTotal, productId, userId } = req.body;
@@ -185,19 +114,61 @@ router.delete('/:id', async (req, res) => {
 });
 
 router.delete("/", async (req, res) => {
-    const { userId } = req.query; // Lấy userId từ query string
-    
-    if (!userId) {
-        return res.status(400).json({ message: "Missing userId in query string" });  // Kiểm tra nếu thiếu userId
-    }
     try {
+        const { userId } = req.query; // Lấy userId từ query string
+        
+        if (!userId) {
+            return res.status(400).json({ message: "Missing userId in query string" });  // Kiểm tra nếu thiếu userId
+        }
+
+        const cartItems = await Cart.find({ userId: userId });
+
+        for (const item of cartItems) {
+            const updatedProduct = await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { countInStock: -item.quantity } }, // Giảm số lượng tồn kho
+                { new: true } // Trả về bản ghi sau khi cập nhật
+            );
+
+            if (!updatedProduct) {
+                return res.status(404).json({ message: `Product with ID ${item.productId} not found` });
+            }
+
+            // Kiểm tra nếu số lượng tồn kho bị âm
+            if (updatedProduct.countInStock < 0) {
+                return res.status(400).json({
+                    message: `Insufficient stock for product ID ${item.productId}`,
+                });
+            }
+        }
+
         await Cart.deleteMany({ userId }); // Xóa giỏhàng theo userId
-        res.status(200).json({ message: 'Cart cleared successfully' });
+        res.status(200).json({ message: 'Cart cleared and stock updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error clearing cart' });
     }
 });
+
+// router.put("/", async (req, res) => {
+//     const { userId } = req.query; // Lấy userId từ query string
+
+//     if (!userId) {
+//         return res.status(400).json({ message: "Missing userId in query string" });  // Kiểm tra nếu thiếu userId
+//     }
+
+//     const cartItems = await Cart.find({ userId: userId });
+
+//     for (const item of cartItems) {
+//         await Product.findByIdAndUpdate(
+//             item.productId,
+//             { $inc: { countInStock: -item.quantity } },
+//             { new: true }
+//         );
+//     }
+    
+// })
+
 
 router.put('/:id', async (req, res) => {
 

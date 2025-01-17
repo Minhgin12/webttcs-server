@@ -165,29 +165,84 @@ router.delete('/:id', async (req, res) => {
         return res.status(500).json({ success: false, error: err.message });
     }
 });
-router.put('/:id',async(req,res)=>{
-const {name,phone,email,password} = req.body;
-const userExist = await User.findById(req.params.id);
-let newPassword
-if(req.body.password){
-    newPassword= bcrypt.hashSync(req.body.password,10)
-} else{
-    newPassword = userExist.passwordHash;
-}
-const user= await User.findByIdAndUpdate(
-    req.params.id,
-    {
-        name:name,
-        phone:phone,
-        email:email,
 
-        password: newPassword,
-        images: req.body.images
-    },{new :true }
-)
-if(!user)
-    return res.status(400).send('không thể đổi mật khẩu')
-res.send(user)
-}
-)
+router.put('/:id', async (req, res) => {
+    const { name, phone, email, password, images } = req.body;
+
+    // Kiểm tra nếu ID hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: 'ID không hợp lệ' });
+    }
+
+    try {
+        // Tìm người dùng hiện tại
+        const userExist = await User.findById(req.params.id);
+        if (!userExist) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+        }
+
+        // Xử lý mật khẩu nếu được cung cấp
+        let newPassword = userExist.password;
+        if (password) {
+            newPassword = await bcrypt.hash(password, 10);
+        }
+
+        // Cập nhật thông tin người dùng
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                name,
+                phone,
+                email,
+                password: newPassword,
+                images,
+            },
+            { new: true } // Trả về thông tin người dùng sau khi cập nhật
+        );
+
+        res.status(200).json({
+            
+            data: updatedUser, // Dữ liệu người dùng đã cập nhật, nếu cần
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Cập nhật thông tin không thành công', error: error.message });
+    }
+});
+
+// Route thay đổi mật khẩu
+router.put('/change-password/:id', async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.params.id;
+
+    // Kiểm tra xem dữ liệu có được gửi đúng không
+    console.log("Received data:", req.body);
+
+    try {
+        // Tìm người dùng trong cơ sở dữ liệu
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Người dùng không tồn tại!' });
+        }
+
+        // Kiểm tra mật khẩu cũ
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Mật khẩu cũ không đúng!' });
+        }
+
+        // Mã hóa mật khẩu mới
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Cập nhật mật khẩu mới
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Mật khẩu đã được thay đổi thành công!' });
+    } catch (error) {
+        console.error("Error occurred during password change:", error);
+        res.status(500).json({ message: 'Lỗi server!', error: error.message });
+    }
+});
+
 module.exports = router;
