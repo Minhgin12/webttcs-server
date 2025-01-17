@@ -7,7 +7,28 @@ const cors = require('cors');
 require('dotenv/config');
 
 const authJwt = require('./helper/jwt.js');
+//** */
+const cron = require("node-cron");
+const axios = require("axios");
 
+// URL endpoint của server
+const SERVER_URL = "https://webbhm-server.onrender.com/api/category"; // Thay bằng URL endpoint của bạn
+
+// Định nghĩa cron job chạy mỗi 10 phút
+cron.schedule("*/10 * * * *", async () => {
+  try {
+    const response = await axios.get(SERVER_URL);
+    console.log("Server is alive! Status:", response.status);
+  } catch (error) {
+    console.error("Failed to ping server:", error.message);
+  }
+});
+
+console.log("Cron job started: Pinging server every 10 minutes.");
+
+app.get("/health-check", (req, res) => {
+    res.status(200).send("Server is alive!");
+  });
 app.use(cors());
 app.options('*', cors())
 
